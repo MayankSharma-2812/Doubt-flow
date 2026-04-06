@@ -1,4 +1,5 @@
 import prisma from "../db.js";
+import { generateHint, generateQuiz } from "../services/ai.service.js";
 
 export const getProfile = async (req, res) => {
   try {
@@ -56,6 +57,26 @@ export const leaderboard = async (req, res) => {
     });
 
     res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getHint = async (req, res) => {
+  try {
+    const { question } = req.body;
+    const hint = await generateHint(question);
+    res.json({ hint });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getQuiz = async (req, res) => {
+  try {
+    const { topic } = req.body;
+    const quiz = await generateQuiz(topic);
+    res.json({ quiz });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

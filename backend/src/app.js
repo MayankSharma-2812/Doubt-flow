@@ -5,6 +5,7 @@ import authMiddleware from "./middleware/auth.middleware.js";
 import postRoutes from "./routes/post.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import gameRoutes from "./routes/game.routes.js";
+import "dotenv/config";
 
 const app = express();
 
