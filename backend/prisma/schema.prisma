@@ -7,11 +7,16 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid())
+  id       String    @id @default(uuid())
   name     String
-  email    String  @unique
+  email    String    @unique
   password String
+
+  coins    Int       @default(0)
+  streak   Int       @default(0)
+
   posts    Post[]
+  comments Comment[]
 }
 
 model Post {
@@ -22,6 +27,24 @@ model Post {
 
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+
+  comments  Comment[]
+
+  isSolved  Boolean  @default(false)   // ⭐ important
+  solvedBy  String?                    // ⭐ store userId
+
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+
+  userId    String
+  postId    String
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 
   createdAt DateTime @default(now())
 }
