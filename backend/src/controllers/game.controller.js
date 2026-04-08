@@ -41,6 +41,15 @@ export const updateStreak = async (userId) => {
   });
 };
 
+export const getBonus = async (req, res) => {
+  try {
+    await addCoins(req.userId, 50);
+    res.json({ message: "Bonus of 50 coins awarded!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const leaderboard = async (req, res) => {
   try {
     const users = await prisma.user.findMany({

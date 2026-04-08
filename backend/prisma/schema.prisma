@@ -17,6 +17,7 @@ model User {
 
   posts    Post[]
   comments Comment[]
+  upvotes  Upvote[]
 }
 
 model Post {
@@ -29,11 +30,22 @@ model Post {
   user      User     @relation(fields: [userId], references: [id])
 
   comments  Comment[]
+  upvotes   Upvote[]
 
   isSolved  Boolean  @default(false)   // ⭐ important
   solvedBy  String?                    // ⭐ store userId
 
   createdAt DateTime @default(now())
+}
+
+model Upvote {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
 }
 
 model Comment {

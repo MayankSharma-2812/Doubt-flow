@@ -24,6 +24,9 @@ export const getAllPosts = async (req, res) => {
     const posts = await prisma.post.findMany({
       include: {
         user: true,
+        _count: {
+          select: { comments: true, upvotes: true },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -42,9 +45,47 @@ export const getMyPosts = async (req, res) => {
       where: {
         userId: req.userId,
       },
+      include: {
+        user: true,
+        _count: {
+          select: { comments: true, upvotes: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const upvotePost = async (req, res) => {
+  try {
+    const { id } = req.params; // postId
+    const existing = await prisma.upvote.findUnique({
+      where: {
+        userId_postId: {
+          userId: req.userId,
+          postId: id,
+        },
+      },
+    });
+
+    if (existing) {
+      await prisma.upvote.delete({
+        where: { id: existing.id },
+      });
+      res.json({ message: "Upvote removed", upvoted: false });
+    } else {
+      await prisma.upvote.create({
+        data: {
+          userId: req.userId,
+          postId: id,
+        },
+      });
+      res.json({ message: "Upvote added", upvoted: true });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
