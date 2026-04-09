@@ -13,7 +13,11 @@ export const getProfile = async (req, res) => {
       },
     });
 
-    res.json(user);
+    const solvedCount = await prisma.post.count({
+      where: { solvedBy: req.userId },
+    });
+
+    res.json({ ...user, solvedCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -43,7 +47,35 @@ export const updateStreak = async (userId) => {
 
 export const getBonus = async (req, res) => {
   try {
-    await addCoins(req.userId, 50);
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { lastBonusClaimed: true }
+    });
+
+    if (user.lastBonusClaimed) {
+      const now = new Date();
+      const lastClaim = new Date(user.lastBonusClaimed);
+      const diffMs = now - lastClaim;
+      const diffHrs = diffMs / (1000 * 60 * 60);
+
+      if (diffHrs < 24) {
+        const remainingHrs = Math.ceil(24 - diffHrs);
+        return res.status(400).json({ 
+          message: `Daily bonus already claimed. Try again in ${remainingHrs} hours.` 
+        });
+      }
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          coins: { increment: 50 },
+          lastBonusClaimed: new Date()
+        }
+      })
+    ]);
+
     res.json({ message: "Bonus of 50 coins awarded!" });
   } catch (err) {
     res.status(500).json({ error: err.message });

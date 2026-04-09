@@ -5,6 +5,7 @@ import authMiddleware from "./middleware/auth.middleware.js";
 import postRoutes from "./routes/post.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import gameRoutes from "./routes/game.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 import "dotenv/config";
 
 const app = express();
@@ -16,6 +17,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/game", gameRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 
 

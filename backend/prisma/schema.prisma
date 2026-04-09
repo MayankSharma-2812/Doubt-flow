@@ -14,10 +14,13 @@ model User {
 
   coins    Int       @default(0)
   streak   Int       @default(0)
+  lastBonusClaimed DateTime?
 
   posts    Post[]
   comments Comment[]
   upvotes  Upvote[]
+  notificationsReceived Notification[] @relation("ReceivedNotifications")
+  notificationsSent     Notification[] @relation("SentNotifications")
 }
 
 model Post {
@@ -35,6 +38,10 @@ model Post {
   isSolved  Boolean  @default(false)   // ⭐ important
   solvedBy  String?                    // ⭐ store userId
   tags      String[]                   // 🏷️ automated AI tags
+  isBoosted Boolean  @default(false)   // 🚀 coin boost
+  priority  String   @default("NORMAL") // EASY | NORMAL | URGENT
+
+  notifications Notification[]
 
   createdAt DateTime @default(now())
 }
@@ -58,6 +65,22 @@ model Comment {
 
   user      User     @relation(fields: [userId], references: [id])
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // recipient
+  actorId   String   // who triggered it
+  type      String   // COMMENT | UPVOTE | SOLVED
+  postId    String?
+  message   String
+  isRead    Boolean  @default(false)
+
+  user      User     @relation("ReceivedNotifications", fields: [userId], references: [id])
+  actor     User     @relation("SentNotifications", fields: [actorId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }

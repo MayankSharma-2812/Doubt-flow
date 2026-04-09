@@ -1,4 +1,4 @@
-import { CheckCircle2, User, ArrowRight, Heart, MessageSquare, Share2, Sparkles, Trash2, Tag } from 'lucide-react';
+import { CheckCircle2, User, ArrowRight, Heart, MessageSquare, Share2, Sparkles, Trash2, Tag, Rocket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -10,11 +10,24 @@ export default function PostCard({ post }) {
   const { token, user } = useAuth();
   const isOwner = user?.id === post.userId;
   const [isDeleted, setIsDeleted] = useState(false);
+  const [isBoosted, setIsBoosted] = useState(post.isBoosted);
   
+  // Reputation Tag Calculation
+  const coins = post.user?.coins || 0;
+  let repTag = { label: 'Beginner', color: 'text-emerald-600 bg-emerald-50 border-emerald-100', dot: 'bg-emerald-500' };
+  if (coins >= 500) repTag = { label: 'Expert', color: 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-100', dot: 'bg-fuchsia-500' };
+  else if (coins >= 100) repTag = { label: 'Helper', color: 'text-blue-600 bg-blue-50 border-blue-100', dot: 'bg-blue-500' };
+
+  // Priority badge config
+  let priorityColor = 'bg-slate-50 text-slate-500 border-slate-200';
+  if (post.priority === 'EASY') priorityColor = 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-emerald-100/50';
+  if (post.priority === 'URGENT') priorityColor = 'bg-red-50 text-red-600 border-red-200 shadow-red-100/50';
+
   // Local state for instant feedback
   const [upvotes, setUpvotes] = useState(post._count?.upvotes || 0);
   const [isUpvoted, setIsUpvoted] = useState(false); // We don't have isUpvoted from backend currently, just keep Local state naive
   const [isAnimating, setIsAnimating] = useState(false);
+  const [boosting, setBoosting] = useState(false);
 
   const handleUpvote = async (e) => {
     e.preventDefault();
@@ -61,10 +74,45 @@ export default function PostCard({ post }) {
     }
   };
 
+  const handleBoost = async (e) => {
+    e.preventDefault();
+    if (isBoosted || boosting) return;
+    if (!window.confirm("Spend 100 coins to boost this post?")) return;
+
+    setBoosting(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/posts/${post.id}/boost`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success("Post Boosted! 🔥");
+        setIsBoosted(true);
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "Failed to boost post");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while boosting");
+    } finally {
+      setBoosting(false);
+    }
+  };
+
   if (isDeleted) return null;
 
   return (
-    <div className={`glass rounded-3xl p-6 md:p-8 card-hover group flex flex-col border-white/40 shadow-lg shadow-slate-200/50 backdrop-blur-xl transition-all duration-300`}>
+    <div className={`glass rounded-3xl p-6 md:p-8 card-hover group flex flex-col backdrop-blur-xl transition-all duration-300 relative overflow-hidden ${
+      isBoosted 
+        ? 'border-amber-400/50 shadow-[0_0_40px_-10px_rgba(251,191,36,0.3)] bg-gradient-to-br from-white/90 to-amber-50/50' 
+        : 'border-white/40 shadow-lg shadow-slate-200/50'
+    }`}>
+      {isBoosted && (
+        <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+           <Rocket className="w-24 h-24 text-amber-500 transform rotate-45" />
+        </div>
+      )}
       {/* Header section */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -74,8 +122,10 @@ export default function PostCard({ post }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-black text-slate-800">{post.user?.name || 'Anonymous'}</span>
-              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Scholar</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${repTag.color}`}>
+                 <span className={`w-1.5 h-1.5 rounded-full ${repTag.dot}`}></span>
+                 {repTag.label}
+              </span>
             </div>
             <span className="text-xs text-slate-400 font-medium tracking-tight">
               {timeAgo(post.createdAt)}
@@ -89,6 +139,11 @@ export default function PostCard({ post }) {
               <CheckCircle2 className="w-3.5 h-3.5" />
               Solved
             </div>
+          )}
+          {post.type === 'DOUBT' && post.priority !== 'NORMAL' && (
+             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${priorityColor}`}>
+                {post.priority} Prio
+             </span>
           )}
           <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
             isDoubt 
@@ -148,10 +203,25 @@ export default function PostCard({ post }) {
           </Link>
         )}
 
+        {isOwner && !isBoosted && (
+          <button 
+            onClick={handleBoost}
+            disabled={boosting}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 active:scale-95 transition-all ml-2"
+          >
+             {boosting ? 'Boosting...' : (
+               <>
+                 <Rocket className="w-3 h-3" />
+                 Boost
+               </>
+             )}
+          </button>
+        )}
+
         {isOwner && (
           <button 
             onClick={handleDelete}
-            className="p-2 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all ml-2"
+            className="p-2 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all ml-auto md:ml-2"
             title="Delete post"
           >
             <Trash2 className="w-4 h-4" />

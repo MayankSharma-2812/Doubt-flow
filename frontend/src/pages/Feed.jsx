@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import PostCard from '../components/PostCard';
-import { Search, MessageCircleQuestion, BookOpen, LayoutGrid, ChevronRight, Sparkles, User } from 'lucide-react';
+import { Search, MessageCircleQuestion, BookOpen, LayoutGrid, ChevronRight, Sparkles, User, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Feed() {
@@ -12,7 +12,19 @@ export default function Feed() {
   const [bonusLoading, setBonusLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showUnsolved, setShowUnsolved] = useState(false);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [bonusTimer, setBonusTimer] = useState(0);
   const { token, fetchProfile } = useAuth();
+
+  useEffect(() => {
+    let interval;
+    if (showBonusModal && bonusTimer < 100) {
+      interval = setInterval(() => {
+        setBonusTimer(prev => Math.min(prev + 1, 100));
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [showBonusModal, bonusTimer]);
 
   useEffect(() => {
     fetchPosts();
@@ -51,9 +63,14 @@ export default function Feed() {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
+      const data = await res.json();
       if (res.ok) {
          toast.success('Bonus coins earned!', { icon: '💰' });
-         fetchProfile(); // update coins globally
+         fetchProfile();
+         setShowBonusModal(false);
+      } else {
+         toast.error(data.message || 'Failed to earn bonus');
+         setShowBonusModal(false);
       }
     } catch(err) {
       console.error(err);
@@ -200,10 +217,11 @@ export default function Feed() {
             </div>
             
             <button 
-              onClick={handleEarnBonus}
+              onClick={() => setShowBonusModal(true)}
               disabled={bonusLoading}
               className="w-full mt-6 py-4 px-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-              {bonusLoading ? "Earning..." : "Earn Bonus Coins"}
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              Claim Daily Bonus
             </button>
           </div>
 
@@ -220,6 +238,60 @@ export default function Feed() {
         </aside>
 
       </div>
+
+      {/* Bonus Modal */}
+      {showBonusModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => !bonusLoading && setShowBonusModal(false)} />
+          <div className="glass w-full max-w-md rounded-[2.5rem] p-8 border-white/40 shadow-2xl relative z-10 animate-scale-up">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce-slow">
+                <Sparkles className="w-10 h-10 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">Daily Bonus Challenge</h2>
+              <p className="text-slate-500 font-medium mb-8">
+                Stay on this page for a few seconds to verify your activity and claim your 50 bonus coins!
+              </p>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden mb-8 border border-slate-200">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-100 ease-linear"
+                  style={{ width: `${bonusTimer}%` }}
+                />
+              </div>
+
+              {bonusTimer < 100 ? (
+                <div className="text-slate-400 font-black text-xs uppercase tracking-widest animate-pulse">
+                  Verifying Activity... {Math.ceil((100 - bonusTimer) / 10)}s
+                </div>
+              ) : (
+                <button 
+                  onClick={handleEarnBonus}
+                  disabled={bonusLoading}
+                  className="btn-primary w-full py-4 rounded-2xl flex items-center justify-center gap-3 animate-slide-up shadow-xl shadow-primary-500/20"
+                >
+                  {bonusLoading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Claim 50 Coins Now
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => setShowBonusModal(false)}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

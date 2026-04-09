@@ -9,6 +9,7 @@ import PostDetail from './pages/PostDetail';
 import CreatePost from './pages/CreatePost';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import UnansweredDoubts from './pages/UnansweredDoubts';
 
 // Components
 import Navbar from './components/Navbar';
@@ -68,6 +69,12 @@ function AppRoutes() {
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/unanswered" element={
+            <ProtectedRoute>
+              <UnansweredDoubts />
             </ProtectedRoute>
           } />
 

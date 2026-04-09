@@ -34,6 +34,9 @@ export default function Dashboard() {
     setAiResult(null);
 
     try {
+      // Simulate "thinking"
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       const res = await fetch('http://localhost:5000/api/game/quiz', {
         method: 'POST',
         headers: { 
@@ -59,6 +62,9 @@ export default function Dashboard() {
     setAiResult(null);
 
     try {
+      // Simulate "thinking"
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       const res = await fetch('http://localhost:5000/api/game/hint', {
         method: 'POST',
         headers: { 
@@ -132,6 +138,42 @@ export default function Dashboard() {
                  <div className="text-xs font-bold text-slate-600">Daily Quiz: <span className="text-indigo-600">+50 Coins</span></div>
                </li>
              </ul>
+          </div>
+
+          <div className="glass rounded-3xl p-8 border-white/50 bg-gradient-to-br from-indigo-50 to-white shadow-xl">
+             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-indigo-600" />
+                Impact Dashboard
+             </h3>
+             <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                         <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-600">Doubts Solved</span>
+                   </div>
+                   <span className="text-xl font-black text-slate-800">{user?.solvedCount || 0}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                         <Sparkles className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-600">Total Influence</span>
+                   </div>
+                   <span className="text-xl font-black text-slate-800">
+                      {Math.floor(((user?.coins || 0) / 10) + ((user?.solvedCount || 0) * 5))}
+                   </span>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                      Top 15% of Scholars this week
+                   </p>
+                </div>
+             </div>
           </div>
         </div>
 
@@ -244,51 +286,68 @@ export default function Dashboard() {
                         </div>
                         
                         <div className="flex items-center gap-4 mb-8">
-                           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-indigo-400">
-                              {aiResult.type === 'QUIZ' ? <Brain className="w-5 h-5" /> : <Lightbulb className="w-5 h-5" />}
-                           </div>
-                           <h4 className="text-xl font-black uppercase tracking-tighter italic">
-                              AI Response {aiResult.type === 'QUIZ' ? 'Generated' : 'Unlocked'}
-                           </h4>
-                        </div>
-
-                        <div className="prose prose-invert max-w-none text-slate-200 font-medium leading-relaxed bg-white/5 p-6 rounded-2xl border border-white/10 italic">
+                               {loading ? (
+                                  <div className="flex flex-col items-center justify-center py-20 space-y-6">
+                                     <div className="relative">
+                                        <div className="w-20 h-20 border-4 border-white/10 rounded-full" />
+                                        <div className="absolute top-0 w-20 h-20 border-4 border-indigo-500 rounded-full animate-spin border-t-transparent" />
+                                        <Brain className="w-8 h-8 text-indigo-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                                     </div>
+                                     <div className="text-center">
+                                        <h4 className="text-xl font-black italic tracking-tighter mb-2">AI is Thinking...</h4>
+                                        <p className="text-slate-400 text-sm font-medium animate-pulse">Sifting through DoubtFlow knowledge banks</p>
+                                     </div>
+                                  </div>
+                               ) : (
+                                  <h4 className="text-xl font-black uppercase tracking-tighter italic">
+                                     AI Response {aiResult.type === 'QUIZ' ? 'Generated' : 'Unlocked'}
+                                  </h4>
+                               )}
+                            </div>
+    
+                            {!loading && aiResult && (
+                            <div className="prose prose-invert max-w-none text-slate-200 font-medium leading-relaxed bg-white/5 p-6 rounded-2xl border border-white/10 italic">
                            {aiResult.type === 'QUIZ' ? (
                              <div className="space-y-6">
-                               {(() => {
-                                 try {
-                                   const questions = JSON.parse(aiResult.content);
-                                   return questions.map((q, i) => (
-                                     <div key={i} className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/50">
-                                       <p className="font-black text-lg text-white mb-4 not-italic font-sans">{i + 1}. {q.q}</p>
-                                       <ul className="space-y-2 not-italic font-sans">
-                                         {q.options.map((opt, j) => {
-                                           const isCorrect = opt === q.a;
-                                           return (
-                                             <li key={j} className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${
-                                               isCorrect ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-bold' : 'border-slate-700 bg-slate-900 text-slate-300'
-                                             }`}>
-                                                <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${
-                                                  isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
-                                                }`}>
-                                                  {String.fromCharCode(65 + j)}
-                                                </div>
-                                                {opt}
-                                             </li>
-                                           );
-                                         })}
-                                       </ul>
-                                     </div>
-                                   ));
-                                 } catch (e) {
-                                   return <p>{aiResult.content}</p>;
-                                 }
-                               })()}
+                                {(() => {
+                                  try {
+                                    if (!aiResult.content) return <p className="text-slate-400">Empty response from AI.</p>;
+                                    const cleanedContent = typeof aiResult.content === 'string' ? aiResult.content.trim() : JSON.stringify(aiResult.content);
+                                    const questions = JSON.parse(cleanedContent);
+                                    if (!Array.isArray(questions)) throw new Error("Not an array");
+                                    return questions.map((q, i) => (
+                                      <div key={i} className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/50">
+                                        <p className="font-black text-lg text-white mb-4 not-italic font-sans">{i + 1}. {q.q}</p>
+                                        <ul className="space-y-2 not-italic font-sans">
+                                          {(q.options || []).map((opt, j) => {
+                                            const isCorrect = opt === q.a;
+                                            return (
+                                              <li key={j} className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${
+                                                isCorrect ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-bold' : 'border-slate-700 bg-slate-900 text-slate-300'
+                                              }`}>
+                                                 <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${
+                                                   isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
+                                                 }`}>
+                                                   {String.fromCharCode(65 + j)}
+                                                 </div>
+                                                 {opt}
+                                              </li>
+                                            );
+                                          })}
+                                        </ul>
+                                      </div>
+                                    ));
+                                  } catch (e) {
+                                    console.error("Quiz Parse Error:", e);
+                                    return <p className="text-slate-400 italic">Received AI content, but it couldn't be parsed as a quiz format. Try a different topic!</p>;
+                                  }
+                                })()}
                              </div>
                            ) : (
                              aiResult.content
                            )}
                         </div>
+                      )}
                     </div>
                   )}
                </div>

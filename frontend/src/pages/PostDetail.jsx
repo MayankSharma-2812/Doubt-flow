@@ -72,9 +72,15 @@ export default function PostDetail() {
   const handleGetHint = async () => {
     setAiLoading(true);
     try {
+      // Simulate "thinking" ⏳
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       const res = await fetch('http://localhost:5000/api/game/hint', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({ question: `Context: ${post?.title}. Details: ${post?.content}` }),
       });
       const data = await res.json();

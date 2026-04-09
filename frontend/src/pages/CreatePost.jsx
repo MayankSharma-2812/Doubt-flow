@@ -12,6 +12,7 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [tagLoading, setTagLoading] = useState(false);
   const [tags, setTags] = useState([]);
+  const [priority, setPriority] = useState('NORMAL');
   const [error, setError] = useState('');
   
   const { token } = useAuth();
@@ -60,7 +61,7 @@ export default function CreatePost() {
           'Content-Type': 'application/json',
           'Authorization': token
         },
-        body: JSON.stringify({ title, content, type, tags }),
+        body: JSON.stringify({ title, content, type, tags, priority }),
       });
       
       if (res.ok) {
@@ -140,6 +141,31 @@ export default function CreatePost() {
               </span>
             </button>
           </div>
+
+          {/* Priority Selection - Only for Doubts */}
+          {type === 'DOUBT' && (
+            <div className="animate-fade-in">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">Set Priority</label>
+              <div className="grid grid-cols-3 gap-3">
+                {['EASY', 'NORMAL', 'URGENT'].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPriority(p)}
+                    className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
+                      priority === p 
+                        ? p === 'URGENT' ? 'border-red-500 bg-red-50 text-red-600' :
+                          p === 'EASY' ? 'border-emerald-500 bg-emerald-50 text-emerald-600' :
+                          'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-100 text-slate-400 hover:border-slate-200'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6">
             <div>

@@ -6,8 +6,9 @@ const openai = new OpenAI({
 });
 
 const MODELS = [
-  "google/gemma-4-31b-it:free",
+  "google/gemma-2-9b-it:free",
   "minimax/minimax-m2.5:free",
+  "mistralai/mistral-7b-instruct:free",
   "nvidia/nemotron-nano-9b-v2:free"
 ];
 
@@ -89,10 +90,15 @@ Return ONLY the JSON array, no markdown, no explanation, no code fences.`,
     // Try to extract JSON from the response (handle potential markdown wrapping)
     const jsonMatch = resContent.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      JSON.parse(jsonMatch[0]); // Validate it's proper JSON
-      return jsonMatch[0];
+      const cleanedJson = jsonMatch[0];
+      try {
+        JSON.parse(cleanedJson); // Validate it's proper JSON
+        return cleanedJson;
+      } catch (parseErr) {
+        console.warn("[AI] Regex matched but JSON.parse failed, using fallback.");
+      }
     }
-    return content;
+    return resContent;
   } catch (err) {
     console.error("AI generateQuiz error:", err.message);
     // Fallback

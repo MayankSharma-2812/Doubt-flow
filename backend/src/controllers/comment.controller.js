@@ -13,6 +13,19 @@ export const addComment = async (req, res) => {
       },
     });
 
+    const post = await prisma.post.findUnique({ where: { id: postId }});
+    if (post && post.userId !== req.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: post.userId,
+          actorId: req.userId,
+          type: "COMMENT",
+          postId: postId,
+          message: "commented on your post",
+        }
+      });
+    }
+
     await addCoins(req.userId, 10);
     await updateStreak(req.userId);
 
@@ -49,6 +62,18 @@ export const markAsSolved = async (req, res) => {
         solvedBy: userId,
       },
     });
+
+    if (userId !== req.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: userId,
+          actorId: req.userId,
+          type: "SOLVED",
+          postId: postId,
+          message: "marked your answer as the solution! (+20 Coins)",
+        }
+      });
+    }
 
     await addCoins(userId, 20);
 
