@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Send, BookOpen, MessageCircleQuestion, Tag, ArrowLeft } from 'lucide-react';
+import { Send, BookOpen, MessageCircleQuestion, Tag, ArrowLeft, Sparkles, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 
 export default function CreatePost() {
@@ -9,10 +10,43 @@ export default function CreatePost() {
   const [content, setContent] = useState('');
   const [type, setType] = useState('NOTE'); // NOTE or DOUBT
   const [loading, setLoading] = useState(false);
+  const [tagLoading, setTagLoading] = useState(false);
+  const [tags, setTags] = useState([]);
   const [error, setError] = useState('');
   
   const { token } = useAuth();
   const navigate = useNavigate();
+
+  const handleGenerateTags = async () => {
+    if (!title && !content) {
+      toast.error('Add title or content first!');
+      return;
+    }
+    setTagLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/posts/generate-tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, content }),
+      });
+      const data = await res.json();
+      if (data.tags) {
+        setTags(data.tags);
+        toast.success('AI Tags generated!', { icon: '✨' });
+      }
+    } catch (err) {
+      toast.error('AI tagging failed');
+    } finally {
+      setTagLoading(false);
+    }
+  };
+
+  const removeTag = (index) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +60,7 @@ export default function CreatePost() {
           'Content-Type': 'application/json',
           'Authorization': token
         },
-        body: JSON.stringify({ title, content, type }),
+        body: JSON.stringify({ title, content, type, tags }),
       });
       
       if (res.ok) {
@@ -130,6 +164,45 @@ export default function CreatePost() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                   <Tag className="w-3 h-3" />
+                   Smart Tags
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateTags}
+                  disabled={tagLoading}
+                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 transition-all group"
+                >
+                  {tagLoading ? (
+                    <div className="w-3 h-3 border border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                  )}
+                  {tagLoading ? 'Analyzing...' : 'AI Auto-Tag'}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                {tags.length > 0 ? (
+                  tags.map((tag, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 shadow-sm animate-fade-in">
+                       {tag}
+                       <button onClick={() => removeTag(i)} type="button" className="text-slate-300 hover:text-rose-500 transition-colors">
+                          <X className="w-3 h-3" />
+                       </button>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[10px] text-slate-300 font-medium italic ml-2 mt-1">
+                    No tags generated yet. Click AI Auto-Tag!
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

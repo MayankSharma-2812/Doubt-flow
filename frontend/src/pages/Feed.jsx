@@ -20,11 +20,16 @@ export default function Feed() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/posts');
+      const res = await fetch('http://localhost:5000/api/posts', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
-      setPosts(data);
+      setPosts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch posts", err);
+      setPosts([]);
     } finally {
       setLoading(false);
     }

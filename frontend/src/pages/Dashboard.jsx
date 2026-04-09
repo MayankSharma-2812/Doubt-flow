@@ -17,7 +17,9 @@ export default function Dashboard() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/game/leaderboard');
+      const res = await fetch('http://localhost:5000/api/game/leaderboard', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       setLeaderboard(data);
     } catch (err) {
@@ -34,7 +36,10 @@ export default function Dashboard() {
     try {
       const res = await fetch('http://localhost:5000/api/game/quiz', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ topic: quizTopic }),
       });
       const data = await res.json();
@@ -56,7 +61,10 @@ export default function Dashboard() {
     try {
       const res = await fetch('http://localhost:5000/api/game/hint', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ question: "Top trending computer science topics" }),
       });
       const data = await res.json();

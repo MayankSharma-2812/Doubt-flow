@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch('http://localhost:5000/api/game/profile', {
         headers: {
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         }
       });
       if (res.ok) {

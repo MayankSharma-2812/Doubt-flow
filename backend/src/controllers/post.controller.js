@@ -3,11 +3,15 @@ import { generateTags } from "../services/ai.service.js";
 
 export const createPost = async (req, res) => {
   try {
-    const { title, content, type } = req.body;
+    const { title, content, type, tags: manualTags } = req.body;
 
-    // ✨ Intelligent AI Tagging
-    const tagsStr = await generateTags(`${title} ${content}`);
-    const tags = tagsStr.split(",").map((t) => t.trim().toLowerCase());
+    let tags = manualTags;
+
+    // ✨ Fallback to Auto Tagging if no tags provided
+    if (!tags || !Array.isArray(tags) || tags.length === 0) {
+      const tagsStr = await generateTags(`${title} ${content}`);
+      tags = tagsStr.split(",").map((t) => t.trim().toLowerCase());
+    }
 
     const post = await prisma.post.create({
       data: {
@@ -118,6 +122,21 @@ export const deletePost = async (req, res) => {
     });
 
     res.json({ message: "Post deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getAIPreviewTags = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    if (!title && !content) {
+      return res.status(400).json({ message: "Title or content required" });
+    }
+
+    const tagsStr = await generateTags(`${title} ${content}`);
+    const tags = tagsStr.split(",").map((t) => t.trim().toLowerCase());
+    res.json({ tags });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

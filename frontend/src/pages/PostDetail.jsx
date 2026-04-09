@@ -25,12 +25,13 @@ export default function PostDetail() {
 
   const fetchPostData = async () => {
     try {
-      const postRes = await fetch(`http://localhost:5000/api/posts`);
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const postRes = await fetch(`http://localhost:5000/api/posts`, { headers });
       const allPosts = await postRes.json();
       const foundPost = allPosts.find(p => p.id === id);
       setPost(foundPost);
 
-      const commentRes = await fetch(`http://localhost:5000/api/comments/${id}`);
+      const commentRes = await fetch(`http://localhost:5000/api/comments/${id}`, { headers });
       const commentData = await commentRes.json();
       setComments(commentData);
     } catch (err) {
@@ -50,7 +51,7 @@ export default function PostDetail() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content: newComment, postId: id }),
       });
@@ -94,7 +95,7 @@ export default function PostDetail() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ postId: id, userId: commentUserId }),
       });

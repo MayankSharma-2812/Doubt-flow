@@ -6,7 +6,7 @@ export const api = async (url, method = "GET", body, token) => {
   };
   
   if (token) {
-    headers["Authorization"] = token;
+    headers["Authorization"] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
 
   const options = {
