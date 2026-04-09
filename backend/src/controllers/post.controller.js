@@ -1,8 +1,13 @@
 import prisma from "../db.js";
+import { generateTags } from "../services/ai.service.js";
 
 export const createPost = async (req, res) => {
   try {
     const { title, content, type } = req.body;
+
+    // ✨ Intelligent AI Tagging
+    const tagsStr = await generateTags(`${title} ${content}`);
+    const tags = tagsStr.split(",").map((t) => t.trim().toLowerCase());
 
     const post = await prisma.post.create({
       data: {
@@ -10,6 +15,7 @@ export const createPost = async (req, res) => {
         content,
         type,
         userId: req.userId,
+        tags,
       },
     });
 
@@ -86,6 +92,32 @@ export const upvotePost = async (req, res) => {
       });
       res.json({ message: "Upvote added", upvoted: true });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const post = await prisma.post.findUnique({
+      where: { id },
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (post.userId !== req.userId) {
+      return res.status(403).json({ message: "Forbidden: Not your post" });
+    }
+
+    await prisma.post.delete({
+      where: { id },
+    });
+
+    res.json({ message: "Post deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

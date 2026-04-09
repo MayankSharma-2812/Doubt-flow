@@ -1,4 +1,4 @@
-import { CheckCircle2, User, ArrowRight, Heart, MessageSquare, Share2, Sparkles } from 'lucide-react';
+import { CheckCircle2, User, ArrowRight, Heart, MessageSquare, Share2, Sparkles, Trash2, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,9 @@ import toast from 'react-hot-toast';
 
 export default function PostCard({ post }) {
   const isDoubt = post.type === 'DOUBT';
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const isOwner = user?.id === post.userId;
+  const [isDeleted, setIsDeleted] = useState(false);
   
   // Local state for instant feedback
   const [upvotes, setUpvotes] = useState(post._count?.upvotes || 0);
@@ -37,6 +39,29 @@ export default function PostCard({ post }) {
       toast.error('Failed to update upvote');
     }
   };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/posts/${post.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success("Post deleted");
+        setIsDeleted(true);
+      } else {
+        toast.error("Failed to delete post");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred");
+    }
+  };
+
+  if (isDeleted) return null;
 
   return (
     <div className={`glass rounded-3xl p-6 md:p-8 card-hover group flex flex-col border-white/40 shadow-lg shadow-slate-200/50 backdrop-blur-xl transition-all duration-300`}>
@@ -75,6 +100,18 @@ export default function PostCard({ post }) {
         </div>
       </div>
 
+      {/* Tags section */}
+      {post.tags && post.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+           {post.tags.map((tag, i) => (
+             <span key={i} className="text-[10px] font-bold text-slate-400 bg-slate-100/50 px-2 py-1 rounded-lg border border-slate-100 flex items-center gap-1 group-hover:bg-white transition-all">
+                <Tag className="w-3 h-3 text-slate-300" />
+                {tag}
+             </span>
+           ))}
+        </div>
+      )}
+
       {/* Content */}
       <Link to={`/post/${post.id}`} className="block mb-6">
         <h3 className="text-2xl font-black text-slate-800 mb-3 group-hover:text-primary-600 transition-colors leading-tight">
@@ -109,6 +146,16 @@ export default function PostCard({ post }) {
              <Sparkles className="w-4 h-4" />
              Solve
           </Link>
+        )}
+
+        {isOwner && (
+          <button 
+            onClick={handleDelete}
+            className="p-2 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all ml-2"
+            title="Delete post"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         )}
       </div>
     </div>

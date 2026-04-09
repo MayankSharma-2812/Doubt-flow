@@ -41,7 +41,11 @@ export default function Navbar() {
                   New Post
                 </Link>
                 
-                <Link to="/dashboard" className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                <Link to="/dashboard" className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors">
+                  Dashboard
+                </Link>
+                
+                <Link to="/profile" className="p-2 hover:bg-slate-100 rounded-xl transition-colors" title="My Profile">
                   <UserIcon className="w-5 h-5 text-slate-600" />
                 </Link>
 

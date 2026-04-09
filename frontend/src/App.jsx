@@ -8,6 +8,7 @@ import Feed from './pages/Feed';
 import PostDetail from './pages/PostDetail';
 import CreatePost from './pages/CreatePost';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 
 // Components
 import Navbar from './components/Navbar';
@@ -61,6 +62,12 @@ function AppRoutes() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
 

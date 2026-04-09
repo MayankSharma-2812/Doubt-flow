@@ -11,6 +11,7 @@ export default function Feed() {
   const [searchQuery, setSearchQuery] = useState('');
   const [bonusLoading, setBonusLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showUnsolved, setShowUnsolved] = useState(false);
   const { token, fetchProfile } = useAuth();
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export default function Feed() {
     const matchesSearch = !searchQuery.trim() || 
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       p.content.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesUnsolved = !showUnsolved || (p.type === 'DOUBT' && !p.isSolved);
+    return matchesFilter && matchesSearch && matchesUnsolved;
   });
 
   const handleEarnBonus = async () => {
@@ -110,6 +112,19 @@ export default function Feed() {
                   Doubts
                 </button>
               </div>
+
+              <label className="flex items-center gap-3 cursor-pointer group bg-white border border-slate-200 px-4 py-2.5 rounded-2xl hover:border-rose-200 transition-all shadow-sm">
+                <div className="relative">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={showUnsolved}
+                    onChange={() => setShowUnsolved(!showUnsolved)}
+                  />
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                </div>
+                <span className="text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-rose-600 transition-colors">Only Unsolved Doubts</span>
+              </label>
             </div>
           </div>
           {/* Inline Composer */}
